@@ -9,8 +9,13 @@
     <!-- Scène AR -->
     <a-scene mindar-image="imageTargetSrc: ./targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
       
-      <!-- Préchargement des assets (vidéo) -->
+      <!-- ============================================================ -->
+      <!--                     ZONE DES ASSETS                          -->
+      <!-- Ajoutez ici vos fichiers vidéo, image et modèle 3D          -->
+      <!-- ============================================================ -->
       <a-assets>
+
+        <!-- [ CIBLE 0 ] Vidéo existante -->
         <video
           id="arVideo"
           src="./AnimationLogo.mp4"
@@ -21,15 +26,43 @@
           webkit-playsinline
           crossorigin="anonymous"
         ></video>
+
+        <!-- ---------------------------------------------------------- -->
+        <!-- [ CIBLE 1 ] IMAGE → Remplacez le src par votre image      -->
+        <!-- ---------------------------------------------------------- -->
+        <img id="image-cible1" src="./VOTRE_IMAGE.png" crossorigin="anonymous" />
+
+        <!-- ---------------------------------------------------------- -->
+        <!-- [ CIBLE 2 ] MODÈLE 3D → Remplacez le src par votre .glb  -->
+        <!-- ---------------------------------------------------------- -->
+        <a-asset-item id="modele-cible2" src="./Untitled.glb"></a-asset-item>
+
+        <!-- ---------------------------------------------------------- -->
+        <!-- [ CIBLE 3 ] VIDÉO → Remplacez le src par votre vidéo     -->
+        <!-- ---------------------------------------------------------- -->
+        <video
+          id="video-cible3"
+          src="./VOTRE_VIDEO.mp4"
+          preload="auto"
+          loop
+          muted
+          playsinline
+          webkit-playsinline
+          crossorigin="anonymous"
+        ></video>
+
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- Lien entre la cible détectée (index 0) et la vidéo -->
-      <a-entity mindar-image-target="targetIndex: 0">
+      <!-- ============================================================ -->
+      <!-- [ CIBLE 0 ] → VIDÉO (AnimationLogo.mp4)                    -->
+      <!-- targetIndex: 0 = 1ère image dans targets.mind               -->
+      <!-- ============================================================ -->
+      <!-- <a-entity mindar-image-target="targetIndex: 0"> -->
         <!-- a-plane affiche la vidéo comme texture sur un plan plat -->
         <!-- Ajustez width/height selon le ratio de votre vidéo (ex: 16:9 → width="1.6" height="0.9") -->
-        <a-plane
+        <!-- <a-plane
           src="#arVideo"
           position="0 0 0"
           width="1"
@@ -37,25 +70,78 @@
           rotation="0 0 0"
           material="src: #arVideo; shader: flat"
         ></a-plane>
+      </a-entity> -->
+
+      <!-- ============================================================ -->
+      <!-- [ CIBLE 1 ] → IMAGE                                         -->
+      <!-- targetIndex: 1 = 2ème image dans targets.mind               -->
+      <!-- ============================================================ -->
+      <a-entity mindar-image-target="targetIndex: 0">
+        <!--
+          Remplacez VOTRE_IMAGE par l'id défini dans <a-assets>
+          Ajustez width/height selon votre image
+        -->
+        <a-image
+          src="#modele-cible2"
+          position="0 0 0"
+          width="1"
+          height="1"
+          rotation="0 0 0"
+        ></a-image>
       </a-entity>
+
+      <!-- ============================================================ -->
+      <!-- [ CIBLE 2 ] → MODÈLE 3D                                     -->
+      <!-- targetIndex: 2 = 3ème image dans targets.mind               -->
+      <!-- ============================================================ -->
+
+      <!-- <a-entity mindar-image-target="targetIndex: 2"> -->
       
+        <!-- <a-gltf-model
+          src="#modele-cible2"
+          position="0 0 0"
+          scale="0.1 0.1 0.1"
+          rotation="0 0 0"
+        ></a-gltf-model>
+      </a-entity> -->
+
+      <!-- ============================================================ -->
+      <!-- [ CIBLE 3 ] → VIDÉO supplémentaire                          -->
+      <!-- targetIndex: 3 = 4ème image dans targets.mind               -->
+      <!-- ============================================================ -->
+
+      <!-- <a-entity mindar-image-target="targetIndex: 3"> -->
+       
+        <!-- <a-plane
+          src="#video-cible3"
+          position="0 0 0"
+          width="1"
+          height="0.55"
+          rotation="0 0 0"
+          material="src: #video-cible3; shader: flat"
+        ></a-plane>
+      </a-entity> -->
+
     </a-scene>
 
     <script>
-      // Lance la vidéo dès que la cible AR est détectée
-      document.addEventListener("DOMContentLoaded", () => {
-        const scene = document.querySelector("a-scene");
-        const video = document.querySelector("#arVideo");
-        const target = document.querySelector("[mindar-image-target]");
+      // Gestion des vidéos : lecture auto quand la cible est détectée, pause quand perdue
+      // document.addEventListener("DOMContentLoaded", () => {
 
-        target.addEventListener("targetFound", () => {
-          video.play();
-        });
+        // --- CIBLE 0 : vidéo principale ---
+        // const video0   = document.querySelector("#arVideo");
+        // const target0  = document.querySelector("[mindar-image-target='targetIndex: 0']");
+        // target0.addEventListener("targetFound", () => video0.play());
+        // target0.addEventListener("targetLost",  () => video0.pause());
 
-        target.addEventListener("targetLost", () => {
-          video.pause();
-        });
-      });
+        // --- CIBLE 3 : vidéo supplémentaire ---
+        // (Décommentez quand vous avez ajouté la vidéo de la cible 3)
+        // const video3  = document.querySelector("#video-cible3");
+        // const target3 = document.querySelector("[mindar-image-target='targetIndex: 3']");
+        // target3.addEventListener("targetFound", () => video3.play());
+        // target3.addEventListener("targetLost",  () => video3.pause());
+
+      // });
     </script>
   </body>
 </html>
