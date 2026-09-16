@@ -122,17 +122,17 @@
         ></a-plane>
       </a-entity> -->
 
-    </a-scene>
+    <!-- </a-scene> -->
 
     <script>
       // Gestion des vidéos : lecture auto quand la cible est détectée, pause quand perdue
       // document.addEventListener("DOMContentLoaded", () => {
 
         // --- CIBLE 0 : vidéo principale ---
-        // const video0   = document.querySelector("#arVideo");
-        // const target0  = document.querySelector("[mindar-image-target='targetIndex: 0']");
-        // target0.addEventListener("targetFound", () => video0.play());
-        // target0.addEventListener("targetLost",  () => video0.pause());
+        const video0   = document.querySelector("#arVideo");
+        const target0  = document.querySelector("[mindar-image-target='targetIndex: 0']");
+        target0.addEventListener("targetFound", () => video0.play());
+        target0.addEventListener("targetLost",  () => video0.pause());
 
         // --- CIBLE 3 : vidéo supplémentaire ---
         // (Décommentez quand vous avez ajouté la vidéo de la cible 3)
