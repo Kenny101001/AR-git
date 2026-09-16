@@ -59,7 +59,7 @@
           material="src: #arVideo; shader: flat"
         ></a-plane>
       </a-entity> -->
-
+ 
     <!-- ============================================================ -->
     <!-- [ CIBLE 1 ] → IMAGE                                         -->
     <!-- targetIndex: 1 = 2ème image dans targets.mind               -->
@@ -81,7 +81,7 @@
     <a-entity mindar-image-target="targetIndex: 0">
 
       
-      <a-gltf-model src="#modele-cible2" position="0 0 0" scale="5 5 5" rotation="270 0 0"></a-gltf-model>
+      <a-gltf-model src="#modele-cible2" position="0 0 0" scale="5 5 5" rotation="270 0 0" touch-rotate></a-gltf-model>
     </a-entity>
 
     <!-- ============================================================ -->
@@ -102,6 +102,66 @@
       </a-entity> -->
 
     <!-- </a-scene> -->
+
+    <script>
+      // ============================================================
+      // Composant touch-rotate
+      // - Auto-rotation continue sur l'axe Y
+      // - Drag tactile pour faire tourner manuellement
+      // ============================================================
+      AFRAME.registerComponent('touch-rotate', {
+        init: function () {
+          this.isDragging  = false;
+          this.autoRotate  = true;
+          this.prevTouchX  = 0;
+          this.autoSpeed   = 0.4;   // degrés/frame en auto-rotation
+          this.dragSpeed   = 0.45;  // sensibilité du drag
+          this.resumeTimer = null;
+
+          const canvas = this.el.sceneEl.canvas;
+
+          // --- Touch Start : début du drag ---
+          canvas.addEventListener('touchstart', (e) => {
+            this.isDragging = true;
+            this.autoRotate = false;
+            this.prevTouchX = e.touches[0].clientX;
+            clearTimeout(this.resumeTimer);
+          }, { passive: true });
+
+          // --- Touch Move : rotation manuelle ---
+          canvas.addEventListener('touchmove', (e) => {
+            if (!this.isDragging) return;
+            const dx  = e.touches[0].clientX - this.prevTouchX;
+            const rot = this.el.getAttribute('rotation');
+            this.el.setAttribute('rotation', {
+              x: rot.x,
+              y: rot.y + dx * this.dragSpeed,
+              z: rot.z
+            });
+            this.prevTouchX = e.touches[0].clientX;
+          }, { passive: true });
+
+          // --- Touch End : reprise auto-rotation après 1.5s ---
+          canvas.addEventListener('touchend', () => {
+            this.isDragging = false;
+            this.resumeTimer = setTimeout(() => {
+              this.autoRotate = true;
+            }, 1500);
+          }, { passive: true });
+        },
+
+        tick: function () {
+          if (this.autoRotate && !this.isDragging) {
+            const rot = this.el.getAttribute('rotation');
+            this.el.setAttribute('rotation', {
+              x: rot.x,
+              y: rot.y + this.autoSpeed,
+              z: rot.z
+            });
+          }
+        }
+      });
+    </script>
 
     <script>
       // Gestion des vidéos : lecture auto quand la cible est détectée, pause quand perdue
