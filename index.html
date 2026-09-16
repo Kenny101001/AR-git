@@ -111,54 +111,78 @@
       // - Drag tactile pour faire tourner manuellement
       // ============================================================
       AFRAME.registerComponent('touch-rotate', {
+        schema: {
+          axis:      { type: 'string', default: 'y' },   // Axe local : 'y' (hauteur de l'objet) ou 'z'
+          autoSpeed: { type: 'number', default: 0.008 }, // Vitesse auto-rotation (radians/frame)
+          dragSpeed: { type: 'number', default: 0.008 }  // Sensibilité tactile
+        },
         init: function () {
           this.isDragging  = false;
           this.autoRotate  = true;
           this.prevTouchX  = 0;
-          this.autoSpeed   = 0.4;   // degrés/frame en auto-rotation
-          this.dragSpeed   = 0.45;  // sensibilité du drag
           this.resumeTimer = null;
 
-          const canvas = this.el.sceneEl.canvas;
+          // Fonction de rotation locale sur son propre axe
+          this.rotateSelf = (rad) => {
+            if (this.data.axis === 'z') {
+              this.el.object3D.rotateZ(rad);
+            } else if (this.data.axis === 'x') {
+              this.el.object3D.rotateX(rad);
+            } else {
+              this.el.object3D.rotateY(rad);
+            }
+          };
 
-          // --- Touch Start : début du drag ---
-          canvas.addEventListener('touchstart', (e) => {
+          // --- Tactile (mobile) ---
+          window.addEventListener('touchstart', (e) => {
+            if (!e.touches || e.touches.length === 0) return;
             this.isDragging = true;
             this.autoRotate = false;
             this.prevTouchX = e.touches[0].clientX;
             clearTimeout(this.resumeTimer);
           }, { passive: true });
 
-          // --- Touch Move : rotation manuelle ---
-          canvas.addEventListener('touchmove', (e) => {
-            if (!this.isDragging) return;
-            const dx  = e.touches[0].clientX - this.prevTouchX;
-            const rot = this.el.getAttribute('rotation');
-            this.el.setAttribute('rotation', {
-              x: rot.x,
-              y: rot.y,
-              z: rot.z + dx * this.dragSpeed
-            });
+          window.addEventListener('touchmove', (e) => {
+            if (!this.isDragging || !e.touches || e.touches.length === 0) return;
+            const dx = e.touches[0].clientX - this.prevTouchX;
+            this.rotateSelf(dx * this.data.dragSpeed);
             this.prevTouchX = e.touches[0].clientX;
           }, { passive: true });
 
-          // --- Touch End : reprise auto-rotation après 1.5s ---
-          canvas.addEventListener('touchend', () => {
+          window.addEventListener('touchend', () => {
             this.isDragging = false;
             this.resumeTimer = setTimeout(() => {
               this.autoRotate = true;
             }, 1500);
           }, { passive: true });
+
+          // --- Souris (PC / émulateur) ---
+          window.addEventListener('mousedown', (e) => {
+            this.isDragging = true;
+            this.autoRotate = false;
+            this.prevTouchX = e.clientX;
+            clearTimeout(this.resumeTimer);
+          });
+
+          window.addEventListener('mousemove', (e) => {
+            if (!this.isDragging) return;
+            const dx = e.clientX - this.prevTouchX;
+            this.rotateSelf(dx * this.data.dragSpeed);
+            this.prevTouchX = e.clientX;
+          });
+
+          window.addEventListener('mouseup', () => {
+            if (!this.isDragging) return;
+            this.isDragging = false;
+            this.resumeTimer = setTimeout(() => {
+              this.autoRotate = true;
+            }, 1500);
+          });
         },
 
         tick: function () {
           if (this.autoRotate && !this.isDragging) {
-            const rot = this.el.getAttribute('rotation');
-            this.el.setAttribute('rotation', {
-              x: rot.x,
-              y: rot.y,
-              z: rot.z + this.autoSpeed
-            });
+            this.rotateSelf(this.data.autoSpeed);
           }
         }
       });
