@@ -156,8 +156,8 @@
             const rot = this.el.getAttribute('rotation');
             this.el.setAttribute('rotation', {
               x: rot.x,
-              y: rot.y,
-              z: rot.z + this.autoSpeed
+              y: rot.y + this.autoSpeed,
+              z: rot.z 
             });
           }
         }
