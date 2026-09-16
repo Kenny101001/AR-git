@@ -135,9 +135,9 @@
             const dx  = e.touches[0].clientX - this.prevTouchX;
             const rot = this.el.getAttribute('rotation');
             this.el.setAttribute('rotation', {
-              x: rot.x + dx * this.dragSpeed,
+              x: rot.x,
               y: rot.y,
-              z: rot.z
+              z: rot.z + dx * this.dragSpeed
             });
             this.prevTouchX = e.touches[0].clientX;
           }, { passive: true });
@@ -156,8 +156,8 @@
             const rot = this.el.getAttribute('rotation');
             this.el.setAttribute('rotation', {
               x: rot.x,
-              y: rot.y + this.autoSpeed,
-              z: rot.z 
+              y: rot.y,
+              z: rot.z + this.autoSpeed
             });
           }
         }
