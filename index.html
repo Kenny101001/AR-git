@@ -135,8 +135,8 @@
             const dx  = e.touches[0].clientX - this.prevTouchX;
             const rot = this.el.getAttribute('rotation');
             this.el.setAttribute('rotation', {
-              x: rot.x,
-              y: rot.y + dx * this.dragSpeed,
+              x: rot.x + dx * this.dragSpeed,
+              y: rot.y,
               z: rot.z
             });
             this.prevTouchX = e.touches[0].clientX;
@@ -155,8 +155,8 @@
           if (this.autoRotate && !this.isDragging) {
             const rot = this.el.getAttribute('rotation');
             this.el.setAttribute('rotation', {
-              x: rot.x,
-              y: rot.y + this.autoSpeed,
+              x: rot.x + this.autoSpeed,
+              y: rot.y,
               z: rot.z
             });
           }
