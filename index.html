@@ -61,7 +61,7 @@
       </a-entity> -->
  
     <!-- ============================================================ -->
-    <!-- [ CIBLE 1 ] → IMAGE                                         -->
+    <!-- [ CIBLE 1 ] →  IMAGE                                         -->
     <!-- targetIndex: 1 = 2ème image dans targets.mind               -->
     <!-- ============================================================ -->
     <!-- <a-entity mindar-image-target="targetIndex: 0"> -->
@@ -81,7 +81,8 @@
     <a-entity mindar-image-target="targetIndex: 0">
 
       
-      <a-gltf-model src="#modele-cible2" position="0 0 0" scale="5 5 5" rotation="270 0 0" touch-rotate></a-gltf-model>
+      <a-gltf-model src="#modele-cible2" position="0 0 0" scale="0 0 0" rotation="-90 0 0"
+        touch-rotate scale-on-target="targetScale: 5 5 5; durIn: 700; durOut: 400"></a-gltf-model>
     </a-entity>
 
     <!-- ============================================================ -->
@@ -159,6 +160,54 @@
               z: rot.z
             });
           }
+        }
+      });
+
+      // ============================================================
+      // Composant scale-on-target
+      // - Apparition  : scale 0→cible avec easeOutBack (effet pop)
+      // - Disparition : scale cible→0 avec easeInBack (effet shrink)
+      // ============================================================
+      AFRAME.registerComponent('scale-on-target', {
+        schema: {
+          targetScale : { type: 'vec3',   default: { x: 1, y: 1, z: 1 } },
+          durIn       : { default: 700  }, // durée apparition  (ms)
+          durOut      : { default: 400  }  // durée disparition (ms)
+        },
+
+        init: function () {
+          // L'objet part invisible (scale 0)
+          this.el.setAttribute('scale', '0 0 0');
+
+          const s  = this.data.targetScale;
+          const to = `${s.x} ${s.y} ${s.z}`;
+
+          // Écoute les événements sur le parent (a-entity mindar-image-target)
+          const parent = this.el.parentEl;
+
+          parent.addEventListener('targetFound', () => {
+            // Annule toute animation en cours
+            this.el.removeAttribute('animation__scaleout');
+            this.el.setAttribute('animation__scalein', {
+              property : 'scale',
+              from     : '0 0 0',
+              to       : to,
+              dur      : this.data.durIn,
+              easing   : 'easeOutBack'
+            });
+          });
+
+          parent.addEventListener('targetLost', () => {
+            this.el.removeAttribute('animation__scalein');
+            const cur = this.el.getAttribute('scale');
+            this.el.setAttribute('animation__scaleout', {
+              property : 'scale',
+              from     : `${cur.x} ${cur.y} ${cur.z}`,
+              to       : '0 0 0',
+              dur      : this.data.durOut,
+              easing   : 'easeInBack'
+            });
+          });
         }
       });
     </script>
