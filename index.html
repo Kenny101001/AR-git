@@ -72,7 +72,7 @@
           Remplacez VOTRE_IMAGE par l'id défini dans <a-assets>
           Ajustez width/height selon votre image
         -->
-    <a-plane src="#arVideo2" position="0 0 0.01" width="1" height="0.55" rotation="0 0 0"
+    <a-plane src="#arVideo2" video-aspect-ratio position="0 0 0.01" width="1" height="1.25" rotation="0 0 0"
         material="src: #arVideo2; shader: flat"></a-plane>
     </a-entity>
 
@@ -237,6 +237,49 @@
           });
         }
       });
+
+      // ============================================================
+      // Composant video-aspect-ratio
+      // Détecte automatiquement la résolution réelle de la vidéo et
+      // ajuste la hauteur/largeur du plan pour éviter toute déformation
+      // ============================================================
+      AFRAME.registerComponent('video-aspect-ratio', {
+        schema: {
+          baseWidth: { type: 'number', default: 1 }
+        },
+        init: function () {
+          const el = this.el;
+          const baseW = this.data.baseWidth;
+
+          const applyRatio = (video) => {
+            if (!video || !video.videoWidth || !video.videoHeight) return;
+            const ratio = video.videoHeight / video.videoWidth;
+            el.setAttribute('width', baseW);
+            el.setAttribute('height', (baseW * ratio).toFixed(4));
+          };
+
+          const checkVideo = () => {
+            const src = el.getAttribute('src');
+            let video = null;
+            if (typeof src === 'string' && src.startsWith('#')) {
+              video = document.querySelector(src);
+            }
+            if (video) {
+              if (video.readyState >= 1) {
+                applyRatio(video);
+              } else {
+                video.addEventListener('loadedmetadata', () => applyRatio(video), { once: true });
+              }
+            }
+          };
+
+          if (el.sceneEl.hasLoaded) {
+            checkVideo();
+          } else {
+            el.sceneEl.addEventListener('loaded', checkVideo);
+          }
+        }
+      });
     </script>
 
     <script>
@@ -246,15 +289,27 @@
       // --- CIBLE 0 : vidéo principale ---
       const video0 = document.querySelector("#arVideo");
       const target0 = document.querySelector("[mindar-image-target='targetIndex: 0']");
-      target0.addEventListener("targetFound", () => video0.play());
-      target0.addEventListener("targetLost", () => video0.pause());
+      if (target0 && video0) {
+        target0.addEventListener("targetFound", () => video0.play());
+        target0.addEventListener("targetLost", () => video0.pause());
+      }
+
+      // --- CIBLE 1 : vidéo Devaflamme ---
+      const video1 = document.querySelector("#arVideo2");
+      const target1 = document.querySelector("[mindar-image-target='targetIndex: 1']");
+      if (target1 && video1) {
+        target1.addEventListener("targetFound", () => video1.play());
+        target1.addEventListener("targetLost", () => video1.pause());
+      }
 
       // --- CIBLE 3 : vidéo supplémentaire ---
       // (Décommentez quand vous avez ajouté la vidéo de la cible 3)
       // const video3  = document.querySelector("#video-cible3");
       // const target3 = document.querySelector("[mindar-image-target='targetIndex: 3']");
-      // target3.addEventListener("targetFound", () => video3.play());
-      // target3.addEventListener("targetLost",  () => video3.pause());
+      // if (target3 && video3) {
+      //   target3.addEventListener("targetFound", () => video3.play());
+      //   target3.addEventListener("targetLost",  () => video3.pause());
+      // }
 
       // });
     </script>
