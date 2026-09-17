@@ -2,6 +2,22 @@
 
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Configuration résolution caméra HD 720p -->
+  <script>
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      const _origGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+      navigator.mediaDevices.getUserMedia = function (constraints) {
+        if (constraints && constraints.video) {
+          if (typeof constraints.video === 'object') {
+            constraints.video.width  = { ideal: 1280, min: 720 };
+            constraints.video.height = { ideal: 720, min: 480 };
+          }
+        }
+        return _origGetUserMedia(constraints);
+      };
+    }
+  </script>
+
   <!-- Inclusion des bibliothèques A-Frame et MindAR -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
@@ -20,8 +36,8 @@
     <a-assets>
 
       <!-- [ CIBLE 0 ] Vidéo existante -->
-      <video id="arVideo" src="./AnimationLogo.mp4" preload="auto" loop playsinline webkit-playsinline
-        crossorigin="anonymous"></video>
+      <!-- <video id="arVideo" src="./AnimationLogo.mp4" preload="auto" loop playsinline webkit-playsinline
+        crossorigin="anonymous"></video> -->
 
         <video id="arVideo2" src="./Devaflamme.mp4" preload="auto" loop playsinline webkit-playsinline
         crossorigin="anonymous"></video>
