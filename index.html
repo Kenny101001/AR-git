@@ -88,8 +88,9 @@
           Remplacez VOTRE_IMAGE par l'id défini dans <a-assets>
           Ajustez width/height selon votre image
         -->
-    <a-plane src="#arVideo2" video-aspect-ratio position="0 0 0.01" width="1" height="1.25" rotation="0 0 0"
-        material="src: #arVideo2; shader: flat"></a-plane>
+    <a-plane src="#arVideo2" video-aspect-ratio position="0 0 0.01" scale="0 0 0" width="1" height="1.25" rotation="0 0 0"
+        material="src: #arVideo2; shader: flat"
+        scale-on-target="targetScale: 1 1 1; durIn: 700; durOut: 400"></a-plane>
     </a-entity>
 
     <!-- ============================================================ -->
