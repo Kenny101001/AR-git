@@ -21,6 +21,75 @@
   <!-- Inclusion des bibliothèques A-Frame et MindAR -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <!-- Style pour le contrôle du son de la vidéo en AR -->
+  <style>
+    /* Bouton flottant de contrôle du son */
+    .sound-control-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sound-control-container.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-8px) scale(0.92);
+    }
+
+    .sound-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 50px;
+      background: rgba(15, 15, 20, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13.5px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: background 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
+    }
+
+    .sound-btn:hover {
+      background: rgba(25, 25, 35, 0.85);
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+
+    .sound-btn:active {
+      transform: scale(0.95);
+    }
+
+    .sound-icon {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      flex-shrink: 0;
+    }
+
+    .sound-icon.hidden {
+      display: none !important;
+    }
+
+    .sound-label {
+      line-height: 1;
+    }
+  </style>
 </head>
 
 <body>
@@ -122,7 +191,7 @@
         ></a-plane>
       </a-entity> -->
 
-    <!-- </a-scene> -->
+    </a-scene>
 
     <script>
       // ============================================================
@@ -299,36 +368,152 @@
       });
     </script>
 
+    <!-- ============================================================ -->
+    <!-- Interface UI Caméra : Bouton pour couper / activer le son    -->
+    <!-- Visible uniquement lorsqu'une vidéo est détectée à la caméra -->
+    <!-- ============================================================ -->
+    <div id="sound-control-container" class="sound-control-container hidden">
+      <button id="sound-toggle-btn" class="sound-btn" type="button" aria-label="Couper ou activer le son">
+        <!-- Icône Son Actif -->
+        <svg id="icon-volume-on" class="sound-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <!-- Icône Son Coupé (Mute) -->
+        <svg id="icon-volume-off" class="sound-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+        <span id="sound-label" class="sound-label">Couper le son</span>
+      </button>
+    </div>
+
     <script>
-      // Gestion des vidéos : lecture auto quand la cible est détectée, pause quand perdue
-      // document.addEventListener("DOMContentLoaded", () => {
+      // ============================================================
+      // Gestion des vidéos et du son (Mute / Unmute)
+      // - Le bouton s'affiche dès qu'une cible vidéo est visible
+      // - Le bouton se masque quand aucune vidéo n'est à l'écran
+      // - Permet de couper ou réactiver le son à tout moment
+      // ============================================================
+      (function () {
+        const soundContainer = document.getElementById("sound-control-container");
+        const soundBtn = document.getElementById("sound-toggle-btn");
+        const iconVolumeOn = document.getElementById("icon-volume-on");
+        const iconVolumeOff = document.getElementById("icon-volume-off");
+        const soundLabel = document.getElementById("sound-label");
 
-      // --- CIBLE 0 : vidéo principale ---
-      const video0 = document.querySelector("#arVideo");
-      const target0 = document.querySelector("[mindar-image-target='targetIndex: 0']");
-      if (target0 && video0) {
-        target0.addEventListener("targetFound", () => video0.play());
-        target0.addEventListener("targetLost", () => video0.pause());
-      }
+        // État global du son (par défaut : son actif)
+        let isMuted = false;
 
-      // --- CIBLE 1 : vidéo Devaflamme ---
-      const video1 = document.querySelector("#arVideo2");
-      const target1 = document.querySelector("[mindar-image-target='targetIndex: 1']");
-      if (target1 && video1) {
-        target1.addEventListener("targetFound", () => video1.play());
-        target1.addEventListener("targetLost", () => video1.pause());
-      }
+        // Ensemble des vidéos actuellement actives à l'écran
+        const activeVideos = new Set();
 
-      // --- CIBLE 3 : vidéo supplémentaire ---
-      // (Décommentez quand vous avez ajouté la vidéo de la cible 3)
-      // const video3  = document.querySelector("#video-cible3");
-      // const target3 = document.querySelector("[mindar-image-target='targetIndex: 3']");
-      // if (target3 && video3) {
-      //   target3.addEventListener("targetFound", () => video3.play());
-      //   target3.addEventListener("targetLost",  () => video3.pause());
-      // }
+        // Met à jour l'apparence du bouton
+        function updateSoundUI() {
+          if (isMuted) {
+            iconVolumeOn.classList.add("hidden");
+            iconVolumeOff.classList.remove("hidden");
+            soundLabel.textContent = "Activer le son";
+            soundBtn.setAttribute("aria-label", "Activer le son");
+          } else {
+            iconVolumeOn.classList.remove("hidden");
+            iconVolumeOff.classList.add("hidden");
+            soundLabel.textContent = "Couper le son";
+            soundBtn.setAttribute("aria-label", "Couper le son");
+          }
+        }
 
-      // });
+        // Bascule le son quand l'utilisateur clique sur le bouton
+        if (soundBtn) {
+          soundBtn.addEventListener("click", () => {
+            isMuted = !isMuted;
+            const allVideos = document.querySelectorAll("video");
+            allVideos.forEach(v => {
+              v.muted = isMuted;
+            });
+            updateSoundUI();
+          });
+        }
+
+        // Fonction pour identifier si une cible AR contient un plan vidéo
+        function findVideoForTarget(targetEl) {
+          const videoPlane = targetEl.querySelector("a-plane[material*='src'], a-plane[src], [video-aspect-ratio]");
+          if (!videoPlane) return null;
+
+          let videoSrc = videoPlane.getAttribute("src");
+          if (!videoSrc) {
+            const mat = videoPlane.getAttribute("material");
+            if (typeof mat === "string") {
+              const match = mat.match(/src:\s*(#[a-zA-Z0-9_-]+)/);
+              if (match) videoSrc = match[1];
+            } else if (mat && mat.src) {
+              videoSrc = mat.src;
+            }
+          }
+
+          if (typeof videoSrc === "string" && videoSrc.startsWith("#")) {
+            const videoEl = document.querySelector(videoSrc);
+            if (videoEl && videoEl.tagName === "VIDEO") {
+              return videoEl;
+            }
+          }
+          return null;
+        }
+
+        // Configuration des écouteurs pour chaque cible
+        function setupTargets() {
+          const targets = document.querySelectorAll("[mindar-image-target]");
+
+          targets.forEach(target => {
+            const video = findVideoForTarget(target);
+            if (!video) return; // Ignore les cibles qui ne sont pas des vidéos (ex: modèles 3D)
+
+            target.addEventListener("targetFound", () => {
+              activeVideos.add(video);
+              video.muted = isMuted;
+
+              const playPromise = video.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                  // Fallback autoplay iOS/Chrome si l'audio sans interaction préalable est bloqué
+                  isMuted = true;
+                  video.muted = true;
+                  updateSoundUI();
+                  video.play().catch(() => {});
+                });
+              }
+
+              // Affiche le bouton de contrôle du son
+              if (soundContainer) {
+                soundContainer.classList.remove("hidden");
+              }
+            });
+
+            target.addEventListener("targetLost", () => {
+              video.pause();
+              activeVideos.delete(video);
+
+              // Si aucune vidéo n'est visible à l'écran, masquer le bouton
+              if (activeVideos.size === 0 && soundContainer) {
+                soundContainer.classList.add("hidden");
+              }
+            });
+          });
+        }
+
+        // Initialisation dès que la scène est chargée
+        const sceneEl = document.querySelector("a-scene");
+        if (sceneEl) {
+          if (sceneEl.hasLoaded) {
+            setupTargets();
+          } else {
+            sceneEl.addEventListener("loaded", setupTargets);
+          }
+        } else {
+          window.addEventListener("DOMContentLoaded", setupTargets);
+        }
+      })();
     </script>
 </body>
 
