@@ -2,15 +2,15 @@
 
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Configuration résolution caméra HD 720p -->
+  <!-- Configuration résolution caméra Full HD 1080p -->
   <script>
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       const _origGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
       navigator.mediaDevices.getUserMedia = function (constraints) {
         if (constraints && constraints.video) {
           if (typeof constraints.video === 'object') {
-            constraints.video.width  = { ideal: 1280, min: 720 };
-            constraints.video.height = { ideal: 720, min: 480 };
+            constraints.video.width = { ideal: 1920, min: 1280 };
+            constraints.video.height = { ideal: 1080, min: 720 };
           }
         }
         return _origGetUserMedia(constraints);
@@ -33,7 +33,7 @@
       display: flex;
       align-items: center;
       transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                  transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .sound-control-container.hidden {
@@ -108,7 +108,7 @@
       <!-- <video id="arVideo" src="./AnimationLogo.mp4" preload="auto" loop playsinline webkit-playsinline
         crossorigin="anonymous"></video> -->
 
-        <video id="arVideo2" src="./Devaflamme.mp4" preload="auto" loop playsinline webkit-playsinline
+      <video id="arVideo2" src="./Devaflamme.mp4" preload="auto" loop playsinline webkit-playsinline
         crossorigin="anonymous"></video>
 
       <!-- ---------------------------------------------------------- -->
@@ -147,18 +147,18 @@
           material="src: #arVideo; shader: flat"
         ></a-plane>
       </a-entity> -->
- 
+
     <!-- ============================================================ -->
     <!-- [ CIBLE 1 ] →  IMAGE                                         -->
     <!-- targetIndex: 1 = 2ème image dans targets.mind               -->
     <!-- ============================================================ -->
     <a-entity mindar-image-target="targetIndex: 1">
-    <!--
+      <!--
           Remplacez VOTRE_IMAGE par l'id défini dans <a-assets>
           Ajustez width/height selon votre image
         -->
-    <a-plane src="#arVideo2" video-aspect-ratio position="0 0 0.01" scale="0 0 0" width="1" height="1.25" rotation="0 0 0"
-        material="src: #arVideo2; shader: flat"
+      <a-plane src="#arVideo2" video-aspect-ratio position="0 0 0.01" scale="0 0 0" width="1" height="1.25"
+        rotation="0 0 0" material="src: #arVideo2; shader: flat"
         scale-on-target="targetScale: 1 1 1; durIn: 700; durOut: 400"></a-plane>
     </a-entity>
 
@@ -169,9 +169,9 @@
 
     <a-entity mindar-image-target="targetIndex: 0">
 
-      
-      <a-gltf-model src="#modele-cible2" position="0 0 0" scale="0 0 0" rotation="90 0 0"
-        touch-rotate scale-on-target="targetScale: 5 5 5; durIn: 700; durOut: 400"></a-gltf-model>
+
+      <a-gltf-model src="#modele-cible2" position="0 0 0" scale="0 0 0" rotation="90 0 0" touch-rotate
+        scale-on-target="targetScale: 5 5 5; durIn: 700; durOut: 400"></a-gltf-model>
     </a-entity>
 
     <!-- ============================================================ -->
@@ -191,330 +191,332 @@
         ></a-plane>
       </a-entity> -->
 
-    </a-scene>
+  </a-scene>
 
-    <script>
-      // ============================================================
-      // Composant touch-rotate
-      // - Auto-rotation continue sur l'axe Y
-      // - Drag tactile pour faire tourner manuellement
-      // ============================================================
-      AFRAME.registerComponent('touch-rotate', {
-        schema: {
-          axis:      { type: 'string', default: 'y' },   // Axe local : 'y' (hauteur de l'objet) ou 'z'
-          autoSpeed: { type: 'number', default: 0.008 }, // Vitesse auto-rotation (radians/frame)
-          dragSpeed: { type: 'number', default: 0.01 }  // Sensibilité tactile
-        },
-        init: function () {
-          this.isDragging  = false;
-          this.autoRotate  = true;
-          this.prevTouchX  = 0;
-          this.resumeTimer = null;
+  <script>
+    // ============================================================
+    // Composant touch-rotate
+    // - Auto-rotation continue sur l'axe Y
+    // - Drag tactile pour faire tourner manuellement
+    // ============================================================
+    AFRAME.registerComponent('touch-rotate', {
+      schema: {
+        axis: { type: 'string', default: 'y' },   // Axe local : 'y' (hauteur de l'objet) ou 'z'
+        autoSpeed: { type: 'number', default: 0.008 }, // Vitesse auto-rotation (radians/frame)
+        dragSpeed: { type: 'number', default: 0.01 }  // Sensibilité tactile
+      },
+      init: function () {
+        this.isDragging = false;
+        this.autoRotate = true;
+        this.prevTouchX = 0;
+        this.resumeTimer = null;
 
-          // Fonction de rotation locale sur son propre axe
-          this.rotateSelf = (rad) => {
-            if (this.data.axis === 'z') {
-              this.el.object3D.rotateZ(rad);
-            } else if (this.data.axis === 'x') {
-              this.el.object3D.rotateX(rad);
+        // Fonction de rotation locale sur son propre axe
+        this.rotateSelf = (rad) => {
+          if (this.data.axis === 'z') {
+            this.el.object3D.rotateZ(rad);
+          } else if (this.data.axis === 'x') {
+            this.el.object3D.rotateX(rad);
+          } else {
+            this.el.object3D.rotateY(rad);
+          }
+        };
+
+        // --- Tactile (mobile) ---
+        window.addEventListener('touchstart', (e) => {
+          if (!e.touches || e.touches.length === 0) return;
+          this.isDragging = true;
+          this.autoRotate = false;
+          this.prevTouchX = e.touches[0].clientX;
+          clearTimeout(this.resumeTimer);
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+          if (!this.isDragging || !e.touches || e.touches.length === 0) return;
+          const dx = e.touches[0].clientX - this.prevTouchX;
+          this.rotateSelf(dx * this.data.dragSpeed);
+          this.prevTouchX = e.touches[0].clientX;
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+          this.isDragging = false;
+          this.resumeTimer = setTimeout(() => {
+            this.autoRotate = true;
+          }, 1500);
+        }, { passive: true });
+
+        // --- Souris (PC / émulateur) ---
+        window.addEventListener('mousedown', (e) => {
+          this.isDragging = true;
+          this.autoRotate = false;
+          this.prevTouchX = e.clientX;
+          clearTimeout(this.resumeTimer);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!this.isDragging) return;
+          const dx = e.clientX - this.prevTouchX;
+          this.rotateSelf(dx * this.data.dragSpeed);
+          this.prevTouchX = e.clientX;
+        });
+
+        window.addEventListener('mouseup', () => {
+          if (!this.isDragging) return;
+          this.isDragging = false;
+          this.resumeTimer = setTimeout(() => {
+            this.autoRotate = true;
+          }, 1500);
+        });
+      },
+
+      tick: function () {
+        if (this.autoRotate && !this.isDragging) {
+          this.rotateSelf(this.data.autoSpeed);
+        }
+      }
+    });
+
+    // ============================================================
+    // Composant scale-on-target
+    // - Apparition  : scale 0→cible avec easeOutBack (effet pop)
+    // - Disparition : scale cible→0 avec easeInBack (effet shrink)
+    // ============================================================
+    AFRAME.registerComponent('scale-on-target', {
+      schema: {
+        targetScale: { type: 'vec3', default: { x: 1, y: 1, z: 1 } },
+        durIn: { default: 700 }, // durée apparition  (ms)
+        durOut: { default: 400 }  // durée disparition (ms)
+      },
+
+      init: function () {
+        // L'objet part invisible (scale 0)
+        this.el.setAttribute('scale', '0 0 0');
+
+        const s = this.data.targetScale;
+        const to = `${s.x} ${s.y} ${s.z}`;
+
+        // Écoute les événements sur le parent (a-entity mindar-image-target)
+        const parent = this.el.parentEl;
+
+        parent.addEventListener('targetFound', () => {
+          // Annule toute animation en cours
+          this.el.removeAttribute('animation__scaleout');
+          this.el.setAttribute('animation__scalein', {
+            property: 'scale',
+            from: '0 0 0',
+            to: to,
+            dur: this.data.durIn,
+            easing: 'easeOutBack'
+          });
+        });
+
+        parent.addEventListener('targetLost', () => {
+          this.el.removeAttribute('animation__scalein');
+          const cur = this.el.getAttribute('scale');
+          this.el.setAttribute('animation__scaleout', {
+            property: 'scale',
+            from: `${cur.x} ${cur.y} ${cur.z}`,
+            to: '0 0 0',
+            dur: this.data.durOut,
+            easing: 'easeInBack'
+          });
+        });
+      }
+    });
+
+    // ============================================================
+    // Composant video-aspect-ratio
+    // Détecte automatiquement la résolution réelle de la vidéo et
+    // ajuste la hauteur/largeur du plan pour éviter toute déformation
+    // ============================================================
+    AFRAME.registerComponent('video-aspect-ratio', {
+      schema: {
+        baseWidth: { type: 'number', default: 1 }
+      },
+      init: function () {
+        const el = this.el;
+        const baseW = this.data.baseWidth;
+
+        const applyRatio = (video) => {
+          if (!video || !video.videoWidth || !video.videoHeight) return;
+          const ratio = video.videoHeight / video.videoWidth;
+          el.setAttribute('width', baseW);
+          el.setAttribute('height', (baseW * ratio).toFixed(4));
+        };
+
+        const checkVideo = () => {
+          const src = el.getAttribute('src');
+          let video = null;
+          if (typeof src === 'string' && src.startsWith('#')) {
+            video = document.querySelector(src);
+          }
+          if (video) {
+            if (video.readyState >= 1) {
+              applyRatio(video);
             } else {
-              this.el.object3D.rotateY(rad);
-            }
-          };
-
-          // --- Tactile (mobile) ---
-          window.addEventListener('touchstart', (e) => {
-            if (!e.touches || e.touches.length === 0) return;
-            this.isDragging = true;
-            this.autoRotate = false;
-            this.prevTouchX = e.touches[0].clientX;
-            clearTimeout(this.resumeTimer);
-          }, { passive: true });
-
-          window.addEventListener('touchmove', (e) => {
-            if (!this.isDragging || !e.touches || e.touches.length === 0) return;
-            const dx = e.touches[0].clientX - this.prevTouchX;
-            this.rotateSelf(dx * this.data.dragSpeed);
-            this.prevTouchX = e.touches[0].clientX;
-          }, { passive: true });
-
-          window.addEventListener('touchend', () => {
-            this.isDragging = false;
-            this.resumeTimer = setTimeout(() => {
-              this.autoRotate = true;
-            }, 1500);
-          }, { passive: true });
-
-          // --- Souris (PC / émulateur) ---
-          window.addEventListener('mousedown', (e) => {
-            this.isDragging = true;
-            this.autoRotate = false;
-            this.prevTouchX = e.clientX;
-            clearTimeout(this.resumeTimer);
-          });
-
-          window.addEventListener('mousemove', (e) => {
-            if (!this.isDragging) return;
-            const dx = e.clientX - this.prevTouchX;
-            this.rotateSelf(dx * this.data.dragSpeed);
-            this.prevTouchX = e.clientX;
-          });
-
-          window.addEventListener('mouseup', () => {
-            if (!this.isDragging) return;
-            this.isDragging = false;
-            this.resumeTimer = setTimeout(() => {
-              this.autoRotate = true;
-            }, 1500);
-          });
-        },
-
-        tick: function () {
-          if (this.autoRotate && !this.isDragging) {
-            this.rotateSelf(this.data.autoSpeed);
-          }
-        }
-      });
-
-      // ============================================================
-      // Composant scale-on-target
-      // - Apparition  : scale 0→cible avec easeOutBack (effet pop)
-      // - Disparition : scale cible→0 avec easeInBack (effet shrink)
-      // ============================================================
-      AFRAME.registerComponent('scale-on-target', {
-        schema: {
-          targetScale : { type: 'vec3',   default: { x: 1, y: 1, z: 1 } },
-          durIn       : { default: 700  }, // durée apparition  (ms)
-          durOut      : { default: 400  }  // durée disparition (ms)
-        },
-
-        init: function () {
-          // L'objet part invisible (scale 0)
-          this.el.setAttribute('scale', '0 0 0');
-
-          const s  = this.data.targetScale;
-          const to = `${s.x} ${s.y} ${s.z}`;
-
-          // Écoute les événements sur le parent (a-entity mindar-image-target)
-          const parent = this.el.parentEl;
-
-          parent.addEventListener('targetFound', () => {
-            // Annule toute animation en cours
-            this.el.removeAttribute('animation__scaleout');
-            this.el.setAttribute('animation__scalein', {
-              property : 'scale',
-              from     : '0 0 0',
-              to       : to,
-              dur      : this.data.durIn,
-              easing   : 'easeOutBack'
-            });
-          });
-
-          parent.addEventListener('targetLost', () => {
-            this.el.removeAttribute('animation__scalein');
-            const cur = this.el.getAttribute('scale');
-            this.el.setAttribute('animation__scaleout', {
-              property : 'scale',
-              from     : `${cur.x} ${cur.y} ${cur.z}`,
-              to       : '0 0 0',
-              dur      : this.data.durOut,
-              easing   : 'easeInBack'
-            });
-          });
-        }
-      });
-
-      // ============================================================
-      // Composant video-aspect-ratio
-      // Détecte automatiquement la résolution réelle de la vidéo et
-      // ajuste la hauteur/largeur du plan pour éviter toute déformation
-      // ============================================================
-      AFRAME.registerComponent('video-aspect-ratio', {
-        schema: {
-          baseWidth: { type: 'number', default: 1 }
-        },
-        init: function () {
-          const el = this.el;
-          const baseW = this.data.baseWidth;
-
-          const applyRatio = (video) => {
-            if (!video || !video.videoWidth || !video.videoHeight) return;
-            const ratio = video.videoHeight / video.videoWidth;
-            el.setAttribute('width', baseW);
-            el.setAttribute('height', (baseW * ratio).toFixed(4));
-          };
-
-          const checkVideo = () => {
-            const src = el.getAttribute('src');
-            let video = null;
-            if (typeof src === 'string' && src.startsWith('#')) {
-              video = document.querySelector(src);
-            }
-            if (video) {
-              if (video.readyState >= 1) {
-                applyRatio(video);
-              } else {
-                video.addEventListener('loadedmetadata', () => applyRatio(video), { once: true });
-              }
-            }
-          };
-
-          if (el.sceneEl.hasLoaded) {
-            checkVideo();
-          } else {
-            el.sceneEl.addEventListener('loaded', checkVideo);
-          }
-        }
-      });
-    </script>
-
-    <!-- ============================================================ -->
-    <!-- Interface UI Caméra : Bouton pour couper / activer le son    -->
-    <!-- Visible uniquement lorsqu'une vidéo est détectée à la caméra -->
-    <!-- ============================================================ -->
-    <div id="sound-control-container" class="sound-control-container hidden">
-      <button id="sound-toggle-btn" class="sound-btn" type="button" aria-label="Couper ou activer le son">
-        <!-- Icône Son Actif -->
-        <svg id="icon-volume-on" class="sound-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-        </svg>
-        <!-- Icône Son Coupé (Mute) -->
-        <svg id="icon-volume-off" class="sound-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <line x1="23" y1="9" x2="17" y2="15"></line>
-          <line x1="17" y1="9" x2="23" y2="15"></line>
-        </svg>
-        <span id="sound-label" class="sound-label">Couper le son</span>
-      </button>
-    </div>
-
-    <script>
-      // ============================================================
-      // Gestion des vidéos et du son (Mute / Unmute)
-      // - Le bouton s'affiche dès qu'une cible vidéo est visible
-      // - Le bouton se masque quand aucune vidéo n'est à l'écran
-      // - Permet de couper ou réactiver le son à tout moment
-      // ============================================================
-      (function () {
-        const soundContainer = document.getElementById("sound-control-container");
-        const soundBtn = document.getElementById("sound-toggle-btn");
-        const iconVolumeOn = document.getElementById("icon-volume-on");
-        const iconVolumeOff = document.getElementById("icon-volume-off");
-        const soundLabel = document.getElementById("sound-label");
-
-        // État global du son (par défaut : son actif)
-        let isMuted = false;
-
-        // Ensemble des vidéos actuellement actives à l'écran
-        const activeVideos = new Set();
-
-        // Met à jour l'apparence du bouton
-        function updateSoundUI() {
-          if (isMuted) {
-            iconVolumeOn.classList.add("hidden");
-            iconVolumeOff.classList.remove("hidden");
-            soundLabel.textContent = "Activer le son";
-            soundBtn.setAttribute("aria-label", "Activer le son");
-          } else {
-            iconVolumeOn.classList.remove("hidden");
-            iconVolumeOff.classList.add("hidden");
-            soundLabel.textContent = "Couper le son";
-            soundBtn.setAttribute("aria-label", "Couper le son");
-          }
-        }
-
-        // Bascule le son quand l'utilisateur clique sur le bouton
-        if (soundBtn) {
-          soundBtn.addEventListener("click", () => {
-            isMuted = !isMuted;
-            const allVideos = document.querySelectorAll("video");
-            allVideos.forEach(v => {
-              v.muted = isMuted;
-            });
-            updateSoundUI();
-          });
-        }
-
-        // Fonction pour identifier si une cible AR contient un plan vidéo
-        function findVideoForTarget(targetEl) {
-          const videoPlane = targetEl.querySelector("a-plane[material*='src'], a-plane[src], [video-aspect-ratio]");
-          if (!videoPlane) return null;
-
-          let videoSrc = videoPlane.getAttribute("src");
-          if (!videoSrc) {
-            const mat = videoPlane.getAttribute("material");
-            if (typeof mat === "string") {
-              const match = mat.match(/src:\s*(#[a-zA-Z0-9_-]+)/);
-              if (match) videoSrc = match[1];
-            } else if (mat && mat.src) {
-              videoSrc = mat.src;
+              video.addEventListener('loadedmetadata', () => applyRatio(video), { once: true });
             }
           }
+        };
 
-          if (typeof videoSrc === "string" && videoSrc.startsWith("#")) {
-            const videoEl = document.querySelector(videoSrc);
-            if (videoEl && videoEl.tagName === "VIDEO") {
-              return videoEl;
-            }
-          }
-          return null;
-        }
-
-        // Configuration des écouteurs pour chaque cible
-        function setupTargets() {
-          const targets = document.querySelectorAll("[mindar-image-target]");
-
-          targets.forEach(target => {
-            const video = findVideoForTarget(target);
-            if (!video) return; // Ignore les cibles qui ne sont pas des vidéos (ex: modèles 3D)
-
-            target.addEventListener("targetFound", () => {
-              activeVideos.add(video);
-              video.muted = isMuted;
-
-              const playPromise = video.play();
-              if (playPromise !== undefined) {
-                playPromise.catch(() => {
-                  // Fallback autoplay iOS/Chrome si l'audio sans interaction préalable est bloqué
-                  isMuted = true;
-                  video.muted = true;
-                  updateSoundUI();
-                  video.play().catch(() => {});
-                });
-              }
-
-              // Affiche le bouton de contrôle du son
-              if (soundContainer) {
-                soundContainer.classList.remove("hidden");
-              }
-            });
-
-            target.addEventListener("targetLost", () => {
-              video.pause();
-              activeVideos.delete(video);
-
-              // Si aucune vidéo n'est visible à l'écran, masquer le bouton
-              if (activeVideos.size === 0 && soundContainer) {
-                soundContainer.classList.add("hidden");
-              }
-            });
-          });
-        }
-
-        // Initialisation dès que la scène est chargée
-        const sceneEl = document.querySelector("a-scene");
-        if (sceneEl) {
-          if (sceneEl.hasLoaded) {
-            setupTargets();
-          } else {
-            sceneEl.addEventListener("loaded", setupTargets);
-          }
+        if (el.sceneEl.hasLoaded) {
+          checkVideo();
         } else {
-          window.addEventListener("DOMContentLoaded", setupTargets);
+          el.sceneEl.addEventListener('loaded', checkVideo);
         }
-      })();
-    </script>
+      }
+    });
+  </script>
+
+  <!-- ============================================================ -->
+  <!-- Interface UI Caméra : Bouton pour couper / activer le son    -->
+  <!-- Visible uniquement lorsqu'une vidéo est détectée à la caméra -->
+  <!-- ============================================================ -->
+  <div id="sound-control-container" class="sound-control-container hidden">
+    <button id="sound-toggle-btn" class="sound-btn" type="button" aria-label="Couper ou activer le son">
+      <!-- Icône Son Actif -->
+      <svg id="icon-volume-on" class="sound-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+      </svg>
+      <!-- Icône Son Coupé (Mute) -->
+      <svg id="icon-volume-off" class="sound-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <line x1="23" y1="9" x2="17" y2="15"></line>
+        <line x1="17" y1="9" x2="23" y2="15"></line>
+      </svg>
+      <span id="sound-label" class="sound-label">Couper le son</span>
+    </button>
+  </div>
+
+  <script>
+    // ============================================================
+    // Gestion des vidéos et du son (Mute / Unmute)
+    // - Le bouton s'affiche dès qu'une cible vidéo est visible
+    // - Le bouton se masque quand aucune vidéo n'est à l'écran
+    // - Permet de couper ou réactiver le son à tout moment
+    // ============================================================
+    (function () {
+      const soundContainer = document.getElementById("sound-control-container");
+      const soundBtn = document.getElementById("sound-toggle-btn");
+      const iconVolumeOn = document.getElementById("icon-volume-on");
+      const iconVolumeOff = document.getElementById("icon-volume-off");
+      const soundLabel = document.getElementById("sound-label");
+
+      // État global du son (par défaut : son actif)
+      let isMuted = false;
+
+      // Ensemble des vidéos actuellement actives à l'écran
+      const activeVideos = new Set();
+
+      // Met à jour l'apparence du bouton
+      function updateSoundUI() {
+        if (isMuted) {
+          iconVolumeOn.classList.add("hidden");
+          iconVolumeOff.classList.remove("hidden");
+          soundLabel.textContent = "Activer le son";
+          soundBtn.setAttribute("aria-label", "Activer le son");
+        } else {
+          iconVolumeOn.classList.remove("hidden");
+          iconVolumeOff.classList.add("hidden");
+          soundLabel.textContent = "Couper le son";
+          soundBtn.setAttribute("aria-label", "Couper le son");
+        }
+      }
+
+      // Bascule le son quand l'utilisateur clique sur le bouton
+      if (soundBtn) {
+        soundBtn.addEventListener("click", () => {
+          isMuted = !isMuted;
+          const allVideos = document.querySelectorAll("video");
+          allVideos.forEach(v => {
+            v.muted = isMuted;
+          });
+          updateSoundUI();
+        });
+      }
+
+      // Fonction pour identifier si une cible AR contient un plan vidéo
+      function findVideoForTarget(targetEl) {
+        const videoPlane = targetEl.querySelector("a-plane[material*='src'], a-plane[src], [video-aspect-ratio]");
+        if (!videoPlane) return null;
+
+        let videoSrc = videoPlane.getAttribute("src");
+        if (!videoSrc) {
+          const mat = videoPlane.getAttribute("material");
+          if (typeof mat === "string") {
+            const match = mat.match(/src:\s*(#[a-zA-Z0-9_-]+)/);
+            if (match) videoSrc = match[1];
+          } else if (mat && mat.src) {
+            videoSrc = mat.src;
+          }
+        }
+
+        if (typeof videoSrc === "string" && videoSrc.startsWith("#")) {
+          const videoEl = document.querySelector(videoSrc);
+          if (videoEl && videoEl.tagName === "VIDEO") {
+            return videoEl;
+          }
+        }
+        return null;
+      }
+
+      // Configuration des écouteurs pour chaque cible
+      function setupTargets() {
+        const targets = document.querySelectorAll("[mindar-image-target]");
+
+        targets.forEach(target => {
+          const video = findVideoForTarget(target);
+          if (!video) return; // Ignore les cibles qui ne sont pas des vidéos (ex: modèles 3D)
+
+          target.addEventListener("targetFound", () => {
+            activeVideos.add(video);
+            video.muted = isMuted;
+
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(() => {
+                // Fallback autoplay iOS/Chrome si l'audio sans interaction préalable est bloqué
+                isMuted = true;
+                video.muted = true;
+                updateSoundUI();
+                video.play().catch(() => { });
+              });
+            }
+
+            // Affiche le bouton de contrôle du son
+            if (soundContainer) {
+              soundContainer.classList.remove("hidden");
+            }
+          });
+
+          target.addEventListener("targetLost", () => {
+            video.pause();
+            activeVideos.delete(video);
+
+            // Si aucune vidéo n'est visible à l'écran, masquer le bouton
+            if (activeVideos.size === 0 && soundContainer) {
+              soundContainer.classList.add("hidden");
+            }
+          });
+        });
+      }
+
+      // Initialisation dès que la scène est chargée
+      const sceneEl = document.querySelector("a-scene");
+      if (sceneEl) {
+        if (sceneEl.hasLoaded) {
+          setupTargets();
+        } else {
+          sceneEl.addEventListener("loaded", setupTargets);
+        }
+      } else {
+        window.addEventListener("DOMContentLoaded", setupTargets);
+      }
+    })();
+  </script>
 </body>
 
 </html>
